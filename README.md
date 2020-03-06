@@ -51,7 +51,7 @@ Usage: `PrintScreen <select|all>`
 
 # RecordMyDesktop
 
-**RecordMyDesktop** is a small bash script for screencasts with [recordmydesktop](https://recordmydesktop.sourceforge.net).
+**RecordMyDesktop** is a small bash script for screencasts with [recordmydesktop](http://recordmydesktop.sourceforge.net).
 
 Usage: `RecordMyDesktop <select|all> <mute>`
 
