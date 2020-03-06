@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ $TERM != "linux" ]]; then
+  xprop | awk '/^WM_CLASS/{sub(/.* =/, "instance:"); sub(/,/, "\nclass:"); print} /^WM_NAME/{sub(/.* =/, "title:"); print} /^WM_CLIENT_LEADER/{sub(/.* #/, "id:"); print}'
+else
+  xmessage -title 'XProperies' -center "$(xprop | awk '/^WM_CLASS/{sub(/.* =/, "instance:"); sub(/,/, "\nclass:"); print} /^WM_NAME/{sub(/.* =/, "title:"); print} /^WM_CLIENT_LEADER/{sub(/.* #/, "id:"); print}')"
+fi

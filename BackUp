@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+# files to backup from $USER directory
+user_backup_list="$HOME/Sources
+$HOME/bin
+$HOME/.dosbox
+$HOME/.lynx
+$HOME/.ssh
+$HOME/.vim
+$HOME/.bash_logout
+$HOME/.bash_profile
+$HOME/.bashrc
+$HOME/.inputrc
+$HOME/.pam_environment
+$HOME/.tmux.conf
+$HOME/.vimrc
+$HOME/.xinitrc
+$XDG_CONFIG_HOME/cmus
+$XDG_CONFIG_HOME/conky
+$XDG_CONFIG_HOME/dunst
+$XDG_CONFIG_HOME/fontconfig
+$XDG_CONFIG_HOME/git
+$XDG_CONFIG_HOME/gnupg
+$XDG_CONFIG_HOME/gtk-2.0
+$XDG_CONFIG_HOME/gtk-3.0
+$XDG_CONFIG_HOME/htop
+$XDG_CONFIG_HOME/i3
+$XDG_CONFIG_HOME/mc
+$XDG_CONFIG_HOME/mplayer
+$XDG_CONFIG_HOME/mutt
+$XDG_CONFIG_HOME/nano
+$XDG_CONFIG_HOME/openvpn
+$XDG_CONFIG_HOME/picom
+$XDG_CONFIG_HOME/rclone
+$XDG_CONFIG_HOME/rofi
+$XDG_CONFIG_HOME/stardict
+$XDG_CONFIG_HOME/systemd
+$XDG_CONFIG_HOME/twm
+$XDG_CONFIG_HOME/weechat
+$XDG_CONFIG_HOME/X11
+$XDG_CONFIG_HOME/xmodmap
+$XDG_CONFIG_HOME/yay
+$XDG_CONFIG_HOME/aurvote
+$XDG_CONFIG_HOME/mimeapps.list
+$XDG_DATA_HOME/applications"
+
+# files to backup from system
+system_backup_list='/etc/iptables/iptables.rules
+/etc/modprobe.d
+/etc/systemd/network
+/etc/systemd/resolved.conf.d
+/etc/X11/xorg.conf.d
+/etc/locale.conf
+/etc/locale.gen
+/etc/makepkg.conf
+/etc/mkinitcpio.conf
+/etc/pacman.conf
+/etc/vconsole.conf'
+
+# backup filenames
+user_backup_file=$(date +$USER-%a%d%b%Y.tar.zst)
+system_backup_file=$(date +$HOSTNAME-%a%d%b%Y.tar.zst)
+
+createBackup () {
+  echo "Creating $1..."
+  tar --create --zstd --preserve-permissions --same-owner --verbose --file $1 ${@:2}
+  (( $? )) || echo "done."
+}
+
+rcloneBackup () {
+  printf "\nSending $1 to Google Drive...\n"
+  rclone copy --progress $1 GoogleDrive:"LinuxBackup"
+  (( $? )) || echo "done."
+}
+
+removeBackup () {
+  printf "\nDeleting $1..."
+  rm $1
+  (( $? )) || echo "done."
+}
+
+case "$1" in
+  --auto)
+    createBackup $user_backup_file $user_backup_list
+    createBackup $system_backup_file $system_backup_list
+    printf "Checking Google Drive..."
+    ping -4 -c 3 drive.google.com > /dev/null 2>&1
+    if [[ $? == 0 ]]; then
+      echo "available!"
+      rcloneBackup $user_backup_file
+      rcloneBackup $system_backup_file
+      removeBackup $user_backup_file
+      removeBackup $system_backup_file
+    else
+      echo "not available."
+    fi
+    ;;
+  '')
+    createBackup $user_backup_file $user_backup_list
+    createBackup $system_backup_file $system_backup_list
+    read -p "Send backup files to Google Drive? [y/N]:" -n 1 reply_rclone
+    case $reply_rclone in
+      [Yy])
+        rcloneBackup $user_backup_file
+        rcloneBackup $system_backup_file
+        ;;
+      *)
+        printf "\n"
+        ;;
+    esac
+    read -p "Delete backup files? [y/N]:" -n 1 reply_delete
+    case $reply_delete in
+      [Yy])
+        removeBackup $user_backup_file
+        removeBackup $system_backup_file
+        ;;
+      *)
+        printf "\n"
+        ;;
+    esac
+    ;;
+  *)
+    echo "usage: ${0##*/} <options>"
+    echo "  options:"
+    echo "      none:  create backup files, confirm sending to Google Drive"
+    echo "              and confirm deleting local copies"
+    echo "    --auto:  create backup files, send backup files to Google Drive"
+    echo "              and delete local copies"
+    echo "    --help:  this help"
+    exit 1
+    ;;
+esac

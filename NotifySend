@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+(( $# )) || { echo "usage: ${0##*/} <title> <details>"; exit 1; }
+
+# check if a notification daemon is running
+if [[ $(gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
+  notify-send --app-name="$1" --urgency=normal "$1" "$2"
+elif [[ $(wmctrl -m|grep i3) ]]; then
+  i3-nagbar -m "$1: $2"
+else
+  echo -e "$1\n$2" | osd_cat \
+    --font=-misc-fixed-bold-r-normal-*-18-*-*-*-*-*-iso10646-* \
+    --shadow=2 --outline=2 --color=#D6D6D6 --pos=bottom --offset=10 --align=center --delay=10 &
+fi

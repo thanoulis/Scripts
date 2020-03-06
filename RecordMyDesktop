@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+file_name=''
+window_id=''
+case $1 in
+  select)
+    file_name='record-window'
+    window_id="--windowid $(xwininfo | awk '/Window id:/ {print $4}')"
+    ;;
+  all)
+    file_name='record-desktop'
+    window_id=''
+    ;;
+  *)
+    echo "usage: ${0##*/} <select|all> <mute>"
+    exit 1
+    ;;
+esac
+case $2 in
+  mute)
+    sound_device='--no-sound'
+    file_name+='-mute'
+    ;;
+  '')
+    sound_device='--device default'
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+file_name="$HOME/$(date +$file_name-%a%d%b-%T.ogv)"
+  recordmydesktop --on-the-fly-encoding $sound_device $window_id -o $file_name && \
+    NotifySend 'RecordMyDesktop' "Recording finished:\n${file_name##*/}"

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+file_name=''
+window_id=''
+case $1 in
+  select)
+    file_name='screenshot-select'
+    window_id=''
+    ;;
+  all)
+    file_name='screenshot'
+    window_id='-window root'
+    ;;
+  *)
+    echo "usage: ${0##*/} <select|all>"
+    exit 1
+    ;;
+esac
+file_name="$HOME/$(date +$file_name-%a%d%b-%T.png)"
+import $window_id -quality 100 $file_name && \
+  NotifySend 'PrintScreen' "${file_name##*/}"

@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+#
+# cmus-status-display
+#
+# Usage:
+#   in cmus command ":set status_display_program=CMusNotification"
+#
+# This scripts is executed by cmus when status changes:
+#   CMusNotification key1 val1 key2 val2 ...
+#
+# All keys contain only chars a-z. Values are UTF-8 strings.
+#
+# Keys: status file url artist album discnumber tracknumber title date duration
+#   - status (stopped, playing, paused) is always given
+#   - file or url is given only if track is 'loaded' in cmus
+#   - other keys/values are given only if they are available
+#
+
+output() {
+# check if a notification daemon is running
+  if [[ $(gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
+    DISPLAY=:0 notify-send --app-name='cmus-status-display' --urgency=low "C* Music Player $_status:" "$*"
+  else
+    local osd_pid='/tmp/cmus-status-display.pid'
+    [[ -f $osd_pid ]] && pkill --pidfile=$osd_pid 2> /dev/null
+    echo -e "C* Music Player $_status:\n$*" | DISPLAY=:0 osd_cat \
+      --font=-misc-fixed-bold-r-normal-*-18-*-*-*-*-*-iso10646-* \
+      --shadow=2 --outline=2 --color=#D6D6D6 --pos=top --offset=20 --align=center --delay=5 &
+    echo $! > $osd_pid
+  fi
+}
+
+# check if cmus is running
+if [[ -z $(pidof cmus) ]]; then
+    echo "${0##*/}: cmus not running"
+    exit 1
+fi
+
+while [[ $# -ge 2 ]]; do
+  eval _$1='$2'
+  shift 2
+done
+
+# get basic metadata
+if [[ -n $_file ]]; then
+  output "${_title:-$_file}\n$_artist"
+elif [[ -n $_url ]]; then
+  output "$_title\n$_url"
+else
+  echo "${0##*/}: nothing to display"
+fi

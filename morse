@@ -1,0 +1,82 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+my %morse = (
+  # a-z letters
+  'a' => '.-',        'b' => '-...',      'c' => '-.-.',      'd' => '-..',
+  'e' => '.',         'f' => '..-.',      'g' => '--.',       'h' => '....',
+  'i' => '..',        'j' => '.---',      'k' => '-.-',       'l' => '.-..',
+  'm' => '--',        'n' => '-.',        'o' => '---',       'p' => '.--.',
+  'q' => '--.-',      'r' => '.-.',       's' => '...',       't' => '-',
+  'u' => '..-',       'v' => '...-',      'w' => '.--',       'x' => '-..-',
+  'y' => '-.--',      'z' => '--..',
+  # decimal numbers
+  '0' => '-----',     '1' => '.----',     '2' => '..---',     '3' => '...--',
+  '4' => '....-',     '5' => '.....',     '6' => '-....',     '7' => '--...',
+  '8' => '---..',     '9' => '----.',
+  # punctuation marks
+  '.' => '.-.-.-',    ',' => '--..--',    '?' => '..--..',    "'" => '.----.',
+  '!' => '-.-.--',    '/' => '-..-.',     '(' => '-.--.-',    ')' => '-.--.-',
+  '&' => '.-...',     ':' => '---...',    ';' => '-.-.-.',    '=' => '-...-',
+  '+' => '.-.-.',     '-' => '-....-',    '_' => '..--.-',    '"' => '.-..-.',
+  '$' => '...-.--',   '@' => '.--.-.',    ' ' => ' ',
+);
+
+while (<>) {
+  chomp;
+  foreach my $letter ( split('', $_) ) {
+    if (exists $morse{lc $letter}) {
+      print $morse{lc $letter};
+    }
+    else {
+      next;
+    }
+  }
+  print "\n";
+}
+
+__END__
+
+=pod
+
+=head1 NAME
+
+morse - translate English text to morse code
+
+=head1 SYNOPSIS
+
+B<morse> [I<FILES>]...
+
+=head1 DESCRIPTION
+
+B<morse> translates English text to morse code. Input can be from file(s) or
+standard input. Output is always standard output.
+
+=head1 EXAMPLES
+
+=head3 morse
+
+  read from standard input, line to line
+
+=head3 morse file
+
+  translate file into morse code
+
+=head3 morse file1 file2
+
+  translate file1 and file2 into morse code and merge output
+
+=head1 AUTHOR
+
+Thanos Zygouris E<lt>athanasios.zygouris@gmail.comE<gt>
+
+=head1 COPYRIGHT
+
+This program is free software; you can redistribute it and/or modify it under
+the terms of the Perl Artistic Licence 2.0.
+S<E<lt>http://opensource.org/licenses/artistic-license-2.0.phpE<gt>>
+
+=cut
+
