@@ -48,7 +48,9 @@ $XDG_DATA_HOME/applications"
 system_backup_list='/etc/iptables/iptables.rules
 /etc/modprobe.d
 /etc/systemd/network
+/etc/systemd/journald.conf.d
 /etc/systemd/resolved.conf.d
+/etc/systemd/timesyncd.conf.d
 /etc/X11/xorg.conf.d
 /etc/locale.conf
 /etc/locale.gen
@@ -61,19 +63,19 @@ system_backup_list='/etc/iptables/iptables.rules
 user_backup_file=$(date +$USER-%a%d%b%Y.tar.zst)
 system_backup_file=$(date +$HOSTNAME-%a%d%b%Y.tar.zst)
 
-createBackup () {
+createBackup() {
   echo "Creating $1..."
   tar --create --zstd --preserve-permissions --same-owner --verbose --file $1 ${@:2}
   (( $? )) || echo "done."
 }
 
-rcloneBackup () {
+rcloneBackup() {
   printf "\nSending $1 to Google Drive...\n"
   rclone copy --progress $1 GoogleDrive:"LinuxBackup"
   (( $? )) || echo "done."
 }
 
-removeBackup () {
+removeBackup() {
   printf "\nDeleting $1..."
   rm $1
   (( $? )) || echo "done."
