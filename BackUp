@@ -60,8 +60,8 @@ system_backup_list='/etc/iptables/iptables.rules
 /etc/vconsole.conf'
 
 # backup filenames
-user_backup_file=$(date +$USER-%a%d%b%Y.tar.zst)
-system_backup_file=$(date +$HOSTNAME-%a%d%b%Y.tar.zst)
+user_backup_file=$(date +$USER-%m-%d-%Y.tar.zst)
+system_backup_file=$(date +$HOSTNAME-%m-%d-%Y.tar.zst)
 
 createBackup() {
   echo "Creating $1..."
