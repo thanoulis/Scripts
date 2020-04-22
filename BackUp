@@ -18,6 +18,7 @@ $HOME/.xinitrc
 $XDG_CONFIG_HOME/cmus
 $XDG_CONFIG_HOME/conky
 $XDG_CONFIG_HOME/dunst
+$XDG_CONFIG_HOME/fish
 $XDG_CONFIG_HOME/fontconfig
 $XDG_CONFIG_HOME/git
 $XDG_CONFIG_HOME/gnupg
@@ -60,8 +61,8 @@ system_backup_list='/etc/iptables/iptables.rules
 /etc/vconsole.conf'
 
 # backup filenames
-user_backup_file=$(date +$USER-%m-%d-%Y.tar.zst)
-system_backup_file=$(date +$HOSTNAME-%m-%d-%Y.tar.zst)
+user_backup_file=$(date +${USER}%m-%d-%Y.tar.zst)
+system_backup_file=$(date +${HOSTNAME}%m-%d-%Y.tar.zst)
 
 createBackup() {
   echo "Creating $1..."
