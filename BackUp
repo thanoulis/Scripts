@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # files to backup from $USER directory
-user_backup_list="$HOME/Sources
+user_list="$HOME/Sources
 $HOME/bin
 $HOME/.dosbox
 $HOME/.lynx
@@ -10,9 +10,9 @@ $HOME/.vim
 $HOME/.bash_logout
 $HOME/.bash_profile
 $HOME/.bashrc
+$HOME/.icons
 $HOME/.inputrc
 $HOME/.pam_environment
-$HOME/.tmux.conf
 $HOME/.xinitrc
 $XDG_CONFIG_HOME/cmus
 $XDG_CONFIG_HOME/conky
@@ -25,6 +25,7 @@ $XDG_CONFIG_HOME/gtk-2.0
 $XDG_CONFIG_HOME/gtk-3.0
 $XDG_CONFIG_HOME/htop
 $XDG_CONFIG_HOME/i3
+$XDG_CONFIG_HOME/jwm
 $XDG_CONFIG_HOME/mc
 $XDG_CONFIG_HOME/mplayer
 $XDG_CONFIG_HOME/mpv
@@ -36,6 +37,7 @@ $XDG_CONFIG_HOME/redshift
 $XDG_CONFIG_HOME/rofi
 $XDG_CONFIG_HOME/stardict
 $XDG_CONFIG_HOME/systemd
+$XDG_CONFIG_HOME/tmux
 $XDG_CONFIG_HOME/twm
 $XDG_CONFIG_HOME/weechat
 $XDG_CONFIG_HOME/X11
@@ -45,7 +47,7 @@ $XDG_CONFIG_HOME/mimeapps.list
 $XDG_DATA_HOME/applications"
 
 # files to backup from system
-system_backup_list='/etc/iptables/iptables.rules
+system_list='/etc/iptables/iptables.rules
 /etc/modprobe.d
 /etc/systemd/network
 /etc/systemd/journald.conf.d
@@ -59,76 +61,145 @@ system_backup_list='/etc/iptables/iptables.rules
 /etc/pacman.conf
 /etc/vconsole.conf'
 
-# backup filenames
-user_backup_file=$(date +${USER}%m-%d-%Y.tar.zst)
-system_backup_file=$(date +${HOSTNAME}%m-%d-%Y.tar.zst)
-
 createBackup() {
   echo "Creating $1..."
-  tar --create --zstd --preserve-permissions --same-owner --verbose --file $1 ${@:2}
+  tar --create --${compression:-gzip} --preserve-permissions --same-owner --verbose --file $1 ${@:2}
   (( $? )) || echo "done."
+}
+
+checkGoogleDrive() {
+  printf "Checking Google Drive..."
+  ping -4 -c 3 drive.google.com > /dev/null 2>&1
+  if [[ $? == 0 ]]; then
+    echo "available!"
+    rcloneBackup $user_backup $system_backup
+  else
+    echo "not available."
+  fi
 }
 
 rcloneBackup() {
-  printf "\nSending $1 to Google Drive...\n"
-  rclone copy --progress $1 GoogleDrive:"LinuxBackup"
-  (( $? )) || echo "done."
+  for file in "$@"; do
+    printf "\nSending $file to Google Drive...\n"
+    rclone copy --progress $file GoogleDrive:"LinuxBackup"
+    (( $? )) || echo "done."
+  done
 }
 
 removeBackup() {
-  printf "\nDeleting $1..."
-  rm $1
-  (( $? )) || echo "done."
+  for file in "$@"; do
+    printf "\nDeleting $file..."
+    rm $file
+    (( $? )) || echo "done."
+  done
 }
 
-case "$1" in
-  --auto)
-    createBackup $user_backup_file $user_backup_list
-    createBackup $system_backup_file $system_backup_list
-    printf "Checking Google Drive..."
-    ping -4 -c 3 drive.google.com > /dev/null 2>&1
-    if [[ $? == 0 ]]; then
-      echo "available!"
-      rcloneBackup $user_backup_file
-      rcloneBackup $system_backup_file
-      removeBackup $user_backup_file
-      removeBackup $system_backup_file
-    else
-      echo "not available."
-    fi
+default() {
+  read -p "Send backup files to Google Drive? [y/N]:" -n 1 reply_rclone
+  case $reply_rclone in
+    [Yy])
+      checkGoogleDrive
+      ;;
+    *)
+      printf "\n"
+      ;;
+  esac
+  read -p "Delete backup files? [y/N]:" -n 1 reply_delete
+  case $reply_delete in
+    [Yy])
+      removeBackup $user_backup $system_backup
+      ;;
+    *)
+      printf "\n"
+      ;;
+  esac
+}
+
+errorMsg() {
+  echo "${0##*/}: cannot use option '--$1' together with '$option'"
+  exit 1
+}
+
+helpMsg() {
+  echo "usage: ${0##*/} <options>"
+  echo "  options:"
+  echo "      none:  create backup files, (optionally) send them to"
+  echo "              Google Drive and (optionally) delete local copies"
+  echo "    --bzip2: create bzip2 files (tar.bz2)"
+  echo "    --gzip:  create gzip files (tar.gz) [default]"
+  echo "    --zstd:  create zst files (tar.zst)"
+  echo "    --auto:  create backup files, send them to Google Drive"
+  echo "              and delete local copies"
+  echo "    --local: create backup files only"
+  echo "    --help:  this help"
+  exit 1
+}
+
+for option in "$@"; do
+  case $option in
+    --bzip2)
+      if [[ $compression == "" ]]; then
+        extension="bz2"
+        compression=${option:2}
+      else
+        errorMsg $compression
+      fi
+      ;;
+    --gzip)
+      if [[ $compression == "" ]]; then
+        extension="gz"
+        compression=${option:2}
+      else
+        errorMsg $compression
+      fi
+      ;;
+    --zstd)
+      if [[ $compression == "" ]]; then
+        extension="zst"
+        compression=${option:2}
+      else
+        errorMsg $compression
+      fi
+      ;;
+    --auto)
+      if [[ $auto == "" ]]; then
+        auto="auto"
+      else
+        errorMsg $auto
+      fi
+      ;;
+    --local)
+      if [[ $auto == "" ]]; then
+        auto="local"
+      else
+        errorMsg $auto
+      fi
+      ;;
+    --help)
+      helpMsg
+      ;;
+    *)
+      echo "${0##*/}: unrecognized option '$option'"
+      helpMsg
+      ;;
+  esac
+done
+
+# backup filenames
+user_backup=$(date +%Y-%m-%d_${USER}.tar.${extension:-gz})
+system_backup=$(date +%Y-%m-%d_${HOSTNAME}.tar.${extension:-gz})
+
+# create backup files
+createBackup $user_backup $user_list
+createBackup $system_backup $system_list
+case $auto in
+  auto)
+    checkGoogleDrive
+    removeBackup $user_backup $system_backup
     ;;
-  '')
-    createBackup $user_backup_file $user_backup_list
-    createBackup $system_backup_file $system_backup_list
-    read -p "Send backup files to Google Drive? [y/N]:" -n 1 reply_rclone
-    case $reply_rclone in
-      [Yy])
-        rcloneBackup $user_backup_file
-        rcloneBackup $system_backup_file
-        ;;
-      *)
-        printf "\n"
-        ;;
-    esac
-    read -p "Delete backup files? [y/N]:" -n 1 reply_delete
-    case $reply_delete in
-      [Yy])
-        removeBackup $user_backup_file
-        removeBackup $system_backup_file
-        ;;
-      *)
-        printf "\n"
-        ;;
-    esac
+  local)
     ;;
   *)
-    echo "usage: ${0##*/} <options>"
-    echo "  options:"
-    echo "      none:  create backup files, confirm sending to Google Drive"
-    echo "              and confirm deleting local copies"
-    echo "    --auto:  create backup files, send backup files to Google Drive"
-    echo "              and delete local copies"
-    echo "    --help:  this help"
-    exit 1
+    default
     ;;
 esac
