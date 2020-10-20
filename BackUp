@@ -70,11 +70,12 @@ createBackup() {
 checkGoogleDrive() {
   printf "Checking Google Drive..."
   ping -4 -c 3 drive.google.com > /dev/null 2>&1
-  if [[ $? == 0 ]]; then
+  if [[ $? -eq 0 ]]; then
     echo "available!"
     rcloneBackup $user_backup $system_backup
   else
     echo "not available."
+    return 1
   fi
 }
 
@@ -125,14 +126,13 @@ helpMsg() {
   echo "  options:"
   echo "      none:  create backup files, (optionally) send them to"
   echo "              Google Drive and (optionally) delete local copies"
-  echo "    --bzip2: create bzip2 files (tar.bz2)"
-  echo "    --gzip:  create gzip files (tar.gz) [default]"
-  echo "    --zstd:  create zst files (tar.zst)"
+  echo "    --bzip2: create bzip2 files (.tar.bz2)"
+  echo "    --gzip:  create gzip files (.tar.gz) [default]"
+  echo "    --zstd:  create zst files (.tar.zst)"
   echo "    --auto:  create backup files, send them to Google Drive"
   echo "              and delete local copies"
   echo "    --local: create backup files only"
   echo "    --help:  this help"
-  exit 1
 }
 
 for option in "$@"; do
@@ -175,12 +175,14 @@ for option in "$@"; do
         errorMsg $auto
       fi
       ;;
-    --help)
+    -h | --help)
       helpMsg
+      exit 0
       ;;
     *)
       echo "${0##*/}: unrecognized option '$option'"
       helpMsg
+      exit 1
       ;;
   esac
 done
@@ -195,7 +197,9 @@ createBackup $system_backup $system_list
 case $auto in
   auto)
     checkGoogleDrive
-    removeBackup $user_backup $system_backup
+    if [[ $? -eq 0 ]]; then
+      removeBackup $user_backup $system_backup
+    fi
     ;;
   local)
     ;;
