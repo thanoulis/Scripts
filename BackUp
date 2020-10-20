@@ -188,6 +188,7 @@ case ${auto} in
     (( ${?} )) || removeBackup ${filelist}
     ;;
   local)
+    exit 0
     ;;
   *)
     default ${filelist}
