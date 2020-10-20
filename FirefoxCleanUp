@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-profile_dir="$HOME/.mozilla/firefox/*.default*"
-sqlite_list="$profile_dir/*.sqlite"
-for sqlite_file in $sqlite_list; do
-  if [[ -f $sqlite_file ]]; then
-    printf "Cleaning $sqlite_file..."
-    sqlite3 $sqlite_file "VACUUM"
-    if [[ $? -eq 0 ]]; then
+profile_dir="${HOME}/.mozilla/firefox/*.default*"
+sqlite_list="${profile_dir}/*.sqlite"
+for sqlite_file in ${sqlite_list}; do
+  if [[ -w ${sqlite_file} ]]; then
+    printf "Cleaning ${sqlite_file}..."
+    sqlite3 ${sqlite_file} "VACUUM"
+    if [[ ${?} -eq 0 ]]; then
       echo "done"
     fi
   fi
