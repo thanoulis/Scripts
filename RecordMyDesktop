@@ -29,5 +29,5 @@ case $2 in
     ;;
 esac
 file_name="$HOME/$(date +$file_name-%a%d%b-%T.ogv)"
-  recordmydesktop --on-the-fly-encoding $sound_device $window_id -o $file_name && \
-    NotifySend 'RecordMyDesktop' "Recording finished:\n${file_name##*/}"
+recordmydesktop --on-the-fly-encoding $sound_device $window_id -o $file_name && \
+  NotifySend 'RecordMyDesktop' "Recording finished:\n${file_name##*/}"
