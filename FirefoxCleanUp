@@ -6,7 +6,7 @@ for sqlite_file in $sqlite_list; do
   if [[ -f $sqlite_file ]]; then
     printf "Cleaning $sqlite_file..."
     sqlite3 $sqlite_file "VACUUM"
-    if [[ $? == '0' ]]; then
+    if [[ $? -eq 0 ]]; then
       echo "done"
     fi
   fi
