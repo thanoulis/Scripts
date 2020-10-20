@@ -2,6 +2,8 @@
 **BackUp** is a small bash script to backup files using [GNU tar](https://www.gnu.org/software/tar).
 
 ##### Features:
+* [gzip](https://www.gzip.org) compression (default)
+* [bzip2](http://www.bzip.org) compression
 * [zstd](https://www.zstd.net) compression
 * send backups to Google Drive (needs [rclone](https://rclone.org))
 
