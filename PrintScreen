@@ -2,7 +2,7 @@
 
 file_name=''
 window_id=''
-case $1 in
+case ${1} in
   select)
     file_name='screenshot-select'
     window_id=''
@@ -16,6 +16,6 @@ case $1 in
     exit 1
     ;;
 esac
-file_name="$HOME/$(date +$file_name-%a%d%b-%T.png)"
-import $window_id -quality 100 $file_name && \
+file_name="${HOME}/$(date +${file_name}-%a%d%b-%T.png)"
+import ${window_id} -quality 100 ${file_name} && \
   NotifySend 'PrintScreen' "${file_name##*/}"
