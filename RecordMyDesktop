@@ -2,7 +2,7 @@
 
 file_name=''
 window_id=''
-case $1 in
+case ${1} in
   select)
     file_name='record-window'
     window_id="--windowid $(xwininfo | awk '/Window id:/ {print $4}')"
@@ -16,7 +16,7 @@ case $1 in
     exit 1
     ;;
 esac
-case $2 in
+case ${2} in
   mute)
     sound_device='--no-sound'
     file_name+='-mute'
@@ -28,6 +28,6 @@ case $2 in
     exit 1
     ;;
 esac
-file_name="$HOME/$(date +$file_name-%a%d%b-%T.ogv)"
-recordmydesktop --on-the-fly-encoding $sound_device $window_id -o $file_name && \
+file_name="${HOME}/$(date +${file_name}-%a%d%b-%T.ogv)"
+recordmydesktop --on-the-fly-encoding ${sound_device} ${window_id} -o ${file_name} && \
   NotifySend 'RecordMyDesktop' "Recording finished:\n${file_name##*/}"
