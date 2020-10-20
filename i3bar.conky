@@ -11,4 +11,4 @@ echo '['
 echo '[],'
 
 # now send blocks with information forever:
-exec conky --config="$XDG_CONFIG_HOME/conky/i3.conkyrc"
+exec conky --config="${XDG_CONFIG_HOME}/conky/i3.conkyrc"
