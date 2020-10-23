@@ -62,7 +62,7 @@ system_list='/etc/iptables/iptables.rules
 
 createBackup() {
   echo "Creating ${1}..."
-  tar --create ${vcs} --${compression:-gzip} --preserve-permissions --same-owner --verbose --file ${1} ${@:2}
+  tar --create ${vcs} --${tar_type:-gzip} --preserve-permissions --same-owner --verbose --file ${1} ${@:2}
   (( ${?} )) || printf "done.\n\n"
 }
 
@@ -94,7 +94,28 @@ removeBackup() {
   done
 }
 
-default() {
+errorMsg() {
+  echo "${0##*/}: cannot use option '--${1}' together with '${2}'"
+  exit 1
+}
+
+helpMsg() {
+  echo "usage: ${0##*/} <options>"
+  echo "  options:"
+  echo "      none:  create backup files, send them to Google Drive"
+  echo "              and delete local copies (optional)"
+  echo "    --dry:   do a dry run (only check for errors)"
+  echo "    --vcs:   include all version control system directories"
+  echo "    --auto:  create backup files, send them to Google Drive"
+  echo "              and delete local copies"
+  echo "    --local: create backup files only"
+  echo "    --bzip2: create bzip2 files (.tar.bz2)"
+  echo "    --gzip:  create gzip files (.tar.gz) [default]"
+  echo "    --zstd:  create zst files (.tar.zst)"
+  echo "    --help:  this help"
+}
+
+doDefault() {
   read -p "Send backup files to Google Drive? [y/N]:" -n 1 reply_rclone
   printf "\n"
   case ${reply_rclone} in
@@ -117,47 +138,67 @@ default() {
   esac
 }
 
-errorMsg() {
-  echo "${0##*/}: cannot use option '--${1}' together with '${2}'"
-  exit 1
+Main() {
+  local user_backup=$(date +%Y-%m-%d_${USER}.tar.${extension:-gz})
+  local system_backup=$(date +%Y-%m-%d_${HOSTNAME}.tar.${extension:-gz})
+  local backup_list="user system"
+  local filelist="${system_backup} ${user_backup}"
+  for item in ${backup_list}; do
+    local backup="${item}_backup"
+    local list="${item}_list"
+    if [[ ${dry} -eq 1 ]]; then
+      printf "\nDry run for ${!backup}:\n"
+      tar --create ${vcs} ${!list} | tar --list
+      (( ${?} )) || echo "*** Result: OK"
+    else
+      createBackup ${!backup} ${!list}
+    fi
+  done
+  (( ${dry} )) && exit 0
+
+  case ${auto} in
+    auto)
+      checkGoogleDrive ${filelist}
+      (( ${?} )) || removeBackup ${filelist}
+      ;;
+    local)
+      exit 0
+      ;;
+    *)
+      doDefault ${filelist}
+      ;;
+  esac
 }
 
-helpMsg() {
-  echo "usage: ${0##*/} <options>"
-  echo "  options:"
-  echo "      none:  create backup files, send them to Google Drive"
-  echo "              and delete local copies (optional)"
-  echo "    --vcs:   include all version control system directories"
-  echo "    --auto:  create backup files, send them to Google Drive"
-  echo "              and delete local copies"
-  echo "    --local: create backup files only"
-  echo "    --bzip2: create bzip2 files (.tar.bz2)"
-  echo "    --gzip:  create gzip files (.tar.gz) [default]"
-  echo "    --zstd:  create zst files (.tar.zst)"
-  echo "    --help:  this help"
-}
-
+# initialize variables
+dry=0
 vcs='--exclude-vcs'
+tar_type=''
+auto=''
+
 # check options
 for option in ${@}; do
   case ${option} in
+    --dry)
+      dry=1
+      ;;
     --vcs)
-        vcs=''
+      vcs=''
       ;;
     --bzip2 | --gzip | --zstd)
-      if [[ -z ${compression} ]]; then
+      if [[ -z ${tar_type} || ${tar_type} == ${option:2} ]]; then
         case ${option} in
           --bzip2) extension="bz2";;
           --gzip)  extension="gz";;
           --zstd)  extension="zst";;
         esac
-        compression=${option:2}
+        tar_type=${option:2}
       else
-        errorMsg ${compression} ${option}
+        errorMsg ${tar_type} ${option}
       fi
       ;;
     --auto | --local)
-      if [[ -z ${auto} ]]; then
+      if [[ -z ${auto} || ${auto} == ${option:2} ]]; then
         auto=${option:2}
       else
         errorMsg ${auto} ${option}
@@ -175,26 +216,5 @@ for option in ${@}; do
   esac
 done
 
-# backup filenames
-user_backup=$(date +%Y-%m-%d_${USER}.tar.${extension:-gz})
-system_backup=$(date +%Y-%m-%d_${HOSTNAME}.tar.${extension:-gz})
-backup_list="user system"
-filelist="${system_backup} ${user_backup}"
-for item in ${backup_list}; do
-  backup="${item}_backup"
-  list="${item}_list"
-  createBackup ${!backup} ${!list}
-done
-
-case ${auto} in
-  auto)
-    checkGoogleDrive ${filelist}
-    (( ${?} )) || removeBackup ${filelist}
-    ;;
-  local)
-    exit 0
-    ;;
-  *)
-    default ${filelist}
-    ;;
-esac
+# execute main program
+Main
