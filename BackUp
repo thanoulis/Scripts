@@ -3,8 +3,6 @@
 # $USER files/directories to backup
 user_list="${HOME}/Sources
 ${HOME}/bin
-${HOME}/.dosbox
-${HOME}/.lynx
 ${HOME}/.ssh
 ${HOME}/.vim
 ${HOME}/.bash_logout
@@ -38,7 +36,6 @@ ${XDG_CONFIG_HOME}/rofi
 ${XDG_CONFIG_HOME}/stardict
 ${XDG_CONFIG_HOME}/systemd
 ${XDG_CONFIG_HOME}/tmux
-${XDG_CONFIG_HOME}/twm
 ${XDG_CONFIG_HOME}/weechat
 ${XDG_CONFIG_HOME}/X11
 ${XDG_CONFIG_HOME}/yay
@@ -65,7 +62,7 @@ system_list='/etc/iptables/iptables.rules
 
 createBackup() {
   echo "Creating ${1}..."
-  tar --create --${compression:-gzip} --preserve-permissions --same-owner --verbose --file ${1} ${@:2}
+  tar --create ${vcs} --${compression:-gzip} --preserve-permissions --same-owner --verbose --file ${1} ${@:2}
   (( ${?} )) || printf "done.\n\n"
 }
 
@@ -130,6 +127,7 @@ helpMsg() {
   echo "  options:"
   echo "      none:  create backup files, send them to Google Drive"
   echo "              and delete local copies (optional)"
+  echo "    --vcs:   include all version control system directories"
   echo "    --auto:  create backup files, send them to Google Drive"
   echo "              and delete local copies"
   echo "    --local: create backup files only"
@@ -139,9 +137,13 @@ helpMsg() {
   echo "    --help:  this help"
 }
 
+vcs='--exclude-vcs'
 # check options
 for option in ${@}; do
   case ${option} in
+    --vcs)
+        vcs=''
+      ;;
     --bzip2 | --gzip | --zstd)
       if [[ -z ${compression} ]]; then
         case ${option} in
