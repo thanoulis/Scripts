@@ -21,10 +21,7 @@ Usage: `:set status_display_program=CMusNotification` in *cmus* settings
 
 **FirefoxCleanup** is a simple bash script to cleanup Firefox's sqlite3 databases from default profile.
 
-
-# i3bar.conky
-
-**i3bar.conky** is a small bash script to initialize [conky](https://github.com/brndnmtthws/conky) for use with [i3bar](https://i3wm.org).
+Usage: `FirefoxCleanup`
 
 
 # morse
