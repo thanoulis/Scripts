@@ -53,13 +53,15 @@ system_list='/etc/iptables/iptables.rules
 /etc/systemd/journald.conf.d
 /etc/systemd/resolved.conf.d
 /etc/systemd/timesyncd.conf.d
+/etc/udev/rules.d
 /etc/X11/xorg.conf.d
 /etc/locale.conf
 /etc/locale.gen
 /etc/makepkg.conf
 /etc/mkinitcpio.conf
 /etc/pacman.conf
-/etc/vconsole.conf'
+/etc/vconsole.conf
+/usr/local/bin'
 
 createBackup() {
   echo "Creating ${1}..."
