@@ -50,15 +50,13 @@ system_list='/etc/iptables/iptables.rules
 /etc/systemd/journald.conf.d
 /etc/systemd/resolved.conf.d
 /etc/systemd/timesyncd.conf.d
-/etc/udev/rules.d
 /etc/X11/xorg.conf.d
 /etc/locale.conf
 /etc/locale.gen
 /etc/makepkg.conf
 /etc/mkinitcpio.conf
 /etc/pacman.conf
-/etc/vconsole.conf
-/usr/local/bin'
+/etc/vconsole.conf'
 
 createBackup() {
   echo "Creating ${1}..."
@@ -69,12 +67,12 @@ createBackup() {
 checkGoogleDrive() {
   printf "Checking Google Drive..."
   ping -4 -c 3 drive.google.com > /dev/null 2>&1
-  if (( ${?} )); then
-    echo "not available."
-    return 1
-  else
+  if [[ ${?} -eq 0 ]]; then
     echo "available!"
     rcloneBackup ${@}
+  else
+    echo "not available."
+    return 1
   fi
 }
 
@@ -116,25 +114,18 @@ helpMsg() {
 }
 
 doDefault() {
-  read -p "Send backup files to Google Drive? [y/N]:" -n 1 reply_rclone
+  local reply=''
+  read -p "Send backup files to Google Drive? [y/N]:" -n 1 reply
   printf "\n"
-  case ${reply_rclone} in
-    [Yy])
-      checkGoogleDrive ${@}
-      ;;
-    *)
-      printf "\n"
-      ;;
+  case ${reply} in
+    [Yy]) checkGoogleDrive ${@};;
+    *)    printf "\n";;
   esac
-  read -p "Delete backup files? [y/N]:" -n 1 reply_delete
+  read -p "Delete backup files? [y/N]:" -n 1 reply
   printf "\n"
-  case ${reply_delete} in
-    [Yy])
-      removeBackup ${@}
-      ;;
-    *)
-      printf "\n"
-      ;;
+  case ${reply} in
+    [Yy]) removeBackup ${@};;
+    *)    printf "\n";;
   esac
 }
 
