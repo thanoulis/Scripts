@@ -25,8 +25,8 @@ output() {
 
 # check if cmus is running
 if [[ -z $(pidof cmus) ]]; then
-    echo "${0##*/}: cmus not running"
-    exit 1
+  echo "${0##*/}: cmus not running"
+  exit 1
 fi
 
 while [[ $# -ge 2 ]]; do
