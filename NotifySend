@@ -2,13 +2,24 @@
 
 (( $# )) || { echo "usage: ${0##*/} <title> <details>"; exit 1; }
 
+gdbus=$(command -v gdbus)
+notify=$(command -v notify-send)
+rofi=$(command -v rofi)
+nagbar=$(command -v i3-nagbar)
+xmessage=$(command -v xmessage)
+logger=$(command -v logger)
+
 # check if a notification daemon is running
-if [[ $(gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
-  notify-send --app-name="${1}" --urgency=normal "${1}" "${2}"
-elif [[ $(wmctrl -m | grep i3) ]]; then
-  i3-nagbar -m "${1}: ${2}"
+if [[ -e ${gdbus} && -e ${notify} && $(${gdbus} call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
+  ${notify} --urgency=normal "${1}" "${2}"
+elif [[ -e ${rofi} ]]; then
+  ${rofi} -markup -e "<b>${1}</b>: ${2}"
+elif [[ -e ${nagbar} ]]; then
+  ${nagbar} -t warning -m "${1}: ${2}"
+elif [[ -e ${xmessage} ]]; then
+  printf "${1}\n${2}" | ${xmessage} -center -timeout 5 -file -
+elif [[ -e ${logger} ]]; then
+  ${logger} -t notify -- ${1}: ${2}
 else
-  echo -e "${1}\n${2}" | osd_cat \
-    --font=-misc-fixed-bold-r-normal-*-18-*-*-*-*-*-iso10646-* \
-    --shadow=2 --outline=2 --color=#D6D6D6 --pos=bottom --offset=10 --align=center --delay=10 &
+  echo "${1}: ${2}"
 fi
