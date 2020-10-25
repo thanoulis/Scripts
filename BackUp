@@ -60,7 +60,7 @@ system_list='/etc/iptables/iptables.rules
 
 createBackup() {
   echo "Creating ${1}..."
-  tar --create ${vcs} --${tar_type:-gzip} --preserve-permissions --same-owner --verbose --file ${1} ${@:2}
+  tar --create ${vcs} ${tar_type:---gzip} --preserve-permissions --same-owner --verbose --file ${1} ${@:2}
   (( ${?} )) || printf "done.\n\n"
 }
 
@@ -93,7 +93,7 @@ removeBackup() {
 }
 
 errorMsg() {
-  echo "${0##*/}: cannot use option '--${1}' together with '${2}'"
+  echo "${0##*/}: cannot use option '${1}' together with '${2}'"
   exit 1
 }
 
@@ -148,11 +148,11 @@ Main() {
   (( ${dry} )) && exit 0
 
   case ${auto} in
-    auto)
+    --auto)
       checkGoogleDrive ${filelist}
       (( ${?} )) || removeBackup ${filelist}
       ;;
-    local)
+    --local)
       exit 0
       ;;
     *)
@@ -177,20 +177,20 @@ for option in ${@}; do
       vcs=''
       ;;
     --bzip2 | --gzip | --zstd)
-      if [[ -z ${tar_type} || ${tar_type} == ${option:2} ]]; then
+      if [[ -z ${tar_type} || ${tar_type} == ${option} ]]; then
         case ${option} in
           --bzip2) extension="bz2";;
           --gzip)  extension="gz";;
           --zstd)  extension="zst";;
         esac
-        tar_type=${option:2}
+        tar_type=${option}
       else
         errorMsg ${tar_type} ${option}
       fi
       ;;
     --auto | --local)
-      if [[ -z ${auto} || ${auto} == ${option:2} ]]; then
-        auto=${option:2}
+      if [[ -z ${auto} || ${auto} == ${option} ]]; then
+        auto=${option}
       else
         errorMsg ${auto} ${option}
       fi
