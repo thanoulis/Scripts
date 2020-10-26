@@ -12,7 +12,7 @@ For more information: `Backup --help`
 
 # CMusNotification
 
-**CMusNotification** is a small bash to ise with [cmus](https://cmus.github.io).
+**CMusNotification** is a small bash script to use with [cmus](https://cmus.github.io).
 
 Usage: `:set status_display_program=CMusNotification` in *cmus* settings
 
@@ -36,7 +36,14 @@ For more information: `perldoc morse`
 
 # NotifySend
 
-**NotifySend** is a small bash script to use with [notify-send](https://developer.gnome.org/notification-spec) or [osd_cat](http://sourceforge.net/projects/libxosd/).
+**NotifySend** is a small bash script to use with [notify-send](https://developer.gnome.org/notification-spec).
+
+If it doesn't find a notification system, falls back to:
+1. [rofi](https://github.com/davatorium/rofi)
+1. [i3-nagbar](https://i3wm.org)
+1. [xmessage](https://xorg.freedesktop.org)
+1. [logger](https://github.com/karelzak/util-linux)
+1. `echo` builtin command.
 
 Usage: `NotifySend <title> <details>`
 
