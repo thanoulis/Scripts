@@ -4,6 +4,7 @@
 
 gdbus=$(command -v gdbus)
 notify=$(command -v notify-send)
+zenity=$(command -v zenity)
 rofi=$(command -v rofi)
 nagbar=$(command -v i3-nagbar)
 xmessage=$(command -v xmessage)
@@ -12,6 +13,8 @@ logger=$(command -v logger)
 # check if a notification daemon is running
 if [[ -e ${gdbus} && -e ${notify} && $(${gdbus} call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
   ${notify} --urgency=normal "${1}" "${2}"
+elif [[ -e ${zenity} ]]; then
+  ${zenity} --info --text "${1}:\n${2}"
 elif [[ -e ${rofi} ]]; then
   ${rofi} -markup -e "<b>${1}</b>: ${2}"
 elif [[ -e ${nagbar} ]]; then
