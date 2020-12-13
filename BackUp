@@ -40,7 +40,6 @@ ${XDG_CONFIG_HOME}/termite
 ${XDG_CONFIG_HOME}/tmux
 ${XDG_CONFIG_HOME}/weechat
 ${XDG_CONFIG_HOME}/X11
-${XDG_CONFIG_HOME}/yay
 ${XDG_CONFIG_HOME}/aurvote
 ${XDG_CONFIG_HOME}/mimeapps.list
 ${XDG_DATA_HOME}/applications"
@@ -48,6 +47,7 @@ ${XDG_DATA_HOME}/applications"
 # system files/directories to backup
 system_list='/etc/iptables/iptables.rules
 /etc/modprobe.d
+/etc/ssh/sshd_config
 /etc/systemd/network
 /etc/systemd/journald.conf.d
 /etc/systemd/resolved.conf.d
