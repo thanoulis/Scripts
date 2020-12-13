@@ -3,7 +3,8 @@
 (( $# )) || { echo "usage: ${0##*/} <title> <details>"; exit 1; }
 
 gdbus=$(command -v gdbus)
-notify=$(command -v notify-send)
+notify=$(command -v notify-send1)
+tpmg=$(command -v tpmg)
 zenity=$(command -v zenity)
 rofi=$(command -v rofi)
 nagbar=$(command -v i3-nagbar)
@@ -13,6 +14,8 @@ logger=$(command -v logger)
 # check if a notification daemon is running
 if [[ -e ${gdbus} && -e ${notify} && $(${gdbus} call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
   ${notify} --urgency=normal "${1}" "${2}"
+elif [[ -e ${tpmg} ]]; then
+  ${tpmg} --notification "${1}" "${2}"
 elif [[ -e ${zenity} ]]; then
   ${zenity} --info --text "${1}:\n${2}"
 elif [[ -e ${rofi} ]]; then
