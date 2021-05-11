@@ -12,6 +12,7 @@ ${HOME}/.icons
 ${HOME}/.inputrc
 ${HOME}/.pam_environment
 ${HOME}/.xinitrc
+${XDG_CONFIG_HOME}/alacritty
 ${XDG_CONFIG_HOME}/cmus
 ${XDG_CONFIG_HOME}/conky
 ${XDG_CONFIG_HOME}/dunst
@@ -36,7 +37,6 @@ ${XDG_CONFIG_HOME}/redshift
 ${XDG_CONFIG_HOME}/rofi
 ${XDG_CONFIG_HOME}/stardict
 ${XDG_CONFIG_HOME}/systemd
-${XDG_CONFIG_HOME}/termite
 ${XDG_CONFIG_HOME}/tmux
 ${XDG_CONFIG_HOME}/weechat
 ${XDG_CONFIG_HOME}/X11
@@ -47,6 +47,7 @@ ${XDG_DATA_HOME}/applications"
 # system files/directories to backup
 system_list='/etc/iptables/iptables.rules
 /etc/modprobe.d
+/etc/sysctl.d
 /etc/ssh/sshd_config
 /etc/systemd/network
 /etc/systemd/journald.conf.d
