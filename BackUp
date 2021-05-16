@@ -12,7 +12,6 @@ ${HOME}/.icons
 ${HOME}/.inputrc
 ${HOME}/.pam_environment
 ${HOME}/.xinitrc
-${XDG_CONFIG_HOME}/alacritty
 ${XDG_CONFIG_HOME}/cmus
 ${XDG_CONFIG_HOME}/conky
 ${XDG_CONFIG_HOME}/dunst
