@@ -3,7 +3,7 @@
 (( $# )) || { echo "usage: ${0##*/} <title> <details>"; exit 1; }
 
 gdbus=$(command -v gdbus)
-notify=$(command -v notify-send1)
+notify=$(command -v notify-send)
 tpmg=$(command -v tpmg)
 zenity=$(command -v zenity)
 rofi=$(command -v rofi)
