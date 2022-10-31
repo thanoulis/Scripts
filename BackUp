@@ -10,7 +10,6 @@ ${HOME}/.bash_profile
 ${HOME}/.bashrc
 ${HOME}/.icons
 ${HOME}/.inputrc
-${HOME}/.pam_environment
 ${HOME}/.xinitrc
 ${XDG_CONFIG_HOME}/cmus
 ${XDG_CONFIG_HOME}/conky
@@ -37,6 +36,7 @@ ${XDG_CONFIG_HOME}/redshift
 ${XDG_CONFIG_HOME}/rofi
 ${XDG_CONFIG_HOME}/stardict
 ${XDG_CONFIG_HOME}/systemd
+${XDG_CONFIG_HOME}/sway
 ${XDG_CONFIG_HOME}/tmux
 ${XDG_CONFIG_HOME}/weechat
 ${XDG_CONFIG_HOME}/X11
