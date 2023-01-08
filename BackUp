@@ -184,9 +184,9 @@ for option in ${@}; do
 done
 
 # begin backup process
-if [[ ${user} -eq 1 ]]; then
+if [[ ${user} -eq 1 && ${system} -eq 0 ]]; then
   backupFile 'user'
-elif [[ ${system} -eq 1 ]]; then
+elif [[ ${user} -eq 0 && ${system} -eq 1 ]]; then
   backupFile 'system'
 else
   backupFile 'user'
