@@ -1,96 +1,50 @@
 #!/usr/bin/env bash
 
-# $USER files/directories to backup
-user_list="${HOME}/Sources
-${HOME}/bin
-${HOME}/.ssh
-${HOME}/.vim
-${HOME}/.bash_logout
-${HOME}/.bash_profile
-${HOME}/.bashrc
-${HOME}/.icons
-${HOME}/.inputrc
-${HOME}/.xinitrc
-${XDG_CONFIG_HOME}/cmus
-${XDG_CONFIG_HOME}/conky
-${XDG_CONFIG_HOME}/dunst
-${XDG_CONFIG_HOME}/fish
-${XDG_CONFIG_HOME}/fontconfig
-${XDG_CONFIG_HOME}/git
-${XDG_CONFIG_HOME}/gnupg
-${XDG_CONFIG_HOME}/gtk-2.0
-${XDG_CONFIG_HOME}/gtk-3.0
-${XDG_CONFIG_HOME}/htop
-${XDG_CONFIG_HOME}/i3
-${XDG_CONFIG_HOME}/jwm
-${XDG_CONFIG_HOME}/kitty
-${XDG_CONFIG_HOME}/lynx
-${XDG_CONFIG_HOME}/mc
-${XDG_CONFIG_HOME}/mplayer
-${XDG_CONFIG_HOME}/mpv
-${XDG_CONFIG_HOME}/nano
-${XDG_CONFIG_HOME}/picom
-${XDG_CONFIG_HOME}/rclone
-${XDG_CONFIG_HOME}/redshift
-${XDG_CONFIG_HOME}/rofi
-${XDG_CONFIG_HOME}/stardict
-${XDG_CONFIG_HOME}/systemd
-${XDG_CONFIG_HOME}/tmux
-${XDG_CONFIG_HOME}/weechat
-${XDG_CONFIG_HOME}/X11
-${XDG_CONFIG_HOME}/aurvote
-${XDG_CONFIG_HOME}/mimeapps.list
-${XDG_DATA_HOME}/applications"
-
-# system files/directories to backup
-system_list='/etc/iptables/iptables.rules
-/etc/modprobe.d
-/etc/sysctl.d
-/etc/ssh/sshd_config
-/etc/systemd/network
-/etc/systemd/journald.conf.d
-/etc/systemd/resolved.conf.d
-/etc/systemd/timesyncd.conf.d
-/etc/X11/xorg.conf.d
-/etc/locale.conf
-/etc/locale.gen
-/etc/makepkg.conf
-/etc/mkinitcpio.conf
-/etc/pacman.conf
-/etc/vconsole.conf'
+readBackupList() {
+  local backup_rc
+  local backup_list
+  # check backup file list location
+  if [[ -r "${XDG_CONFIG_HOME}/backup/${1}" ]]; then
+    backup_rc="${XDG_CONFIG_HOME}/backup/${1}"
+  elif [[ -r "${HOME}/.backup/${1}" ]]; then
+    backup_rc="${HOME}/.backup/${1}"
+  elif [[ -r "${1}" ]]; then
+    backup_rc="${1}"
+  else
+    return 1
+  fi
+  # read backup list from backup file
+  while read -r line; do
+    [[ ${line} =~ ^[[:space:]]*# ]] && continue
+    backup_list+="${line} "
+  done < ${backup_rc}
+  echo "${backup_list}"
+}
 
 createBackup() {
-  echo "Creating ${1}..."
+  printf "\nCreating ${1}...\n"
   tar --create ${vcs} ${tar_type:---gzip} --preserve-permissions --same-owner --verbose --file ${1} ${@:2}
   (( ${?} )) || printf "done.\n\n"
 }
 
-checkGoogleDrive() {
+sendToCloud() {
   printf "Checking Google Drive..."
   ping -4 -c 3 drive.google.com > /dev/null 2>&1
   if [[ ${?} -eq 0 ]]; then
     echo "available!"
-    rcloneBackup ${@}
+    echo "Sending ${1} to Google Drive..."
+    rclone copy --progress ${1} GoogleDrive:"LinuxBackup"
+    (( ${?} )) || printf "done.\n\n"
   else
     echo "not available."
     return 1
   fi
 }
 
-rcloneBackup() {
-  for file in ${@}; do
-    echo "Sending ${file} to Google Drive..."
-    rclone copy --progress ${file} GoogleDrive:"LinuxBackup"
-    (( ${?} )) || printf "done.\n\n"
-  done
-}
-
 removeBackup() {
-  for file in ${@}; do
-    printf "Deleting ${file}..."
-    rm ${file}
-    (( ${?} )) || echo "done."
-  done
+  printf "Deleting ${1}..."
+  rm ${1}
+  (( ${?} )) || echo "done."
 }
 
 errorMsg() {
@@ -100,64 +54,77 @@ errorMsg() {
 
 helpMsg() {
   echo "usage: ${0##*/} <options>"
-  echo "  options:"
-  echo "      none:  create backup files, send them to Google Drive"
-  echo "              and delete local copies (optional)"
-  echo "    --dry:   do a dry run (only check for errors)"
-  echo "    --vcs:   include all version control system directories"
-  echo "    --auto:  create backup files, send them to Google Drive"
-  echo "              and delete local copies"
-  echo "    --local: create backup files only"
-  echo "    --bzip2: create bzip2 files (.tar.bz2)"
-  echo "    --gzip:  create gzip files (.tar.gz) [default]"
-  echo "    --zstd:  create zst files (.tar.zst)"
-  echo "    --help:  this help"
+  echo '  options:'
+  echo '     none:   create backup files, send them to Google Drive'
+  echo '              and delete local copies (optional)'
+  echo '   --dry:    do a dry run (only check for errors)'
+  echo '   --vcs:    include all version control system directories'
+  echo '   --user:   only backup user filelist (user.backup)'
+  echo '   --system: only backup system filelist (system.backup)'
+  echo '   --auto:   create backup files, send them to Google Drive'
+  echo '              and delete local copies'
+  echo '   --local:  create backup files locally'
+  echo '   --bzip2:  create bzip2 files (.tar.bz2)'
+  echo '   --gzip:   create gzip files (.tar.gz) [default]'
+  echo '   --zstd:   create zst files (.tar.zst)'
+  echo '   --help:   this help'
 }
 
 doDefault() {
   local reply=''
-  read -p "Send backup files to Google Drive? [y/N]:" -n 1 reply
+  read -p "Send ${1} to Google Drive? [y/N]:" -n 1 reply
   printf "\n"
   case ${reply} in
-    [Yy]) checkGoogleDrive ${@};;
+    [Yy]) sendToCloud ${1};;
     *)    printf "\n";;
   esac
-  read -p "Delete backup files? [y/N]:" -n 1 reply
+  read -p "Delete ${1}? [y/N]:" -n 1 reply
   printf "\n"
   case ${reply} in
-    [Yy]) removeBackup ${@};;
+    [Yy]) removeBackup ${1};;
     *)    printf "\n";;
   esac
 }
 
-Main() {
-  local user_backup=$(date +%Y-%m-%d_${USER}.tar.${extension:-gz})
-  local system_backup=$(date +%Y-%m-%d_${HOSTNAME}.tar.${extension:-gz})
-  local backup_list="user system"
-  local filelist="${system_backup} ${user_backup}"
-  for item in ${backup_list}; do
-    local backup="${item}_backup"
-    local list="${item}_list"
-    if [[ ${dry} -eq 1 ]]; then
-      printf "\nDry run for ${!backup}:\n"
-      tar --create ${vcs} ${!list} | tar --list
-      (( ${?} )) || echo "*** Result: OK"
-    else
-      createBackup ${!backup} ${!list}
-    fi
-  done
-  (( ${dry} )) && exit 0
+backupFile() {
+  case ${1} in
+    'user')
+      local backup_name=$(date +%Y-%m-%d_${USER}.tar.${extension:-gz})
+      ;;
+    'system')
+      local backup_name=$(date +%Y-%m-%d_${HOSTNAME}.tar.${extension:-gz})
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+  local backup_list=$(readBackupList "${1}.backup")
+  if [[ -z ${backup_list} ]]; then
+    echo "${0##*/}: cannot find ${1}.backup in:"
+    echo "  ${XDG_CONFIG_HOME}/backup/${1}.backup"
+    echo "  ${HOME}/.backup/${1}.backup"
+    echo "  $(pwd)/${1}.backup"
+    exit 1
+  fi
+  if [[ ${dry} -eq 1 ]]; then
+    printf "\nDry run for ${backup_name}:\n"
+    tar --create ${vcs} ${backup_list} | tar --list
+    (( ${?} )) || echo "*** Result: OK"
+    return 0
+  else
+    createBackup ${backup_name} ${backup_list}
+  fi
 
   case ${auto} in
     --auto)
-      checkGoogleDrive ${filelist}
-      (( ${?} )) || removeBackup ${filelist}
+      sendToCloud ${backup_name}
+      (( ${?} )) || removeBackup ${backup_name}
       ;;
     --local)
-      exit 0
+      return 0
       ;;
     *)
-      doDefault ${filelist}
+      doDefault ${backup_name}
       ;;
   esac
 }
@@ -166,6 +133,8 @@ Main() {
 dry=0
 vcs='--exclude-vcs'
 tar_type=''
+user=0
+system=0
 auto=''
 
 # check options
@@ -189,6 +158,12 @@ for option in ${@}; do
         errorMsg ${tar_type} ${option}
       fi
       ;;
+    --user)
+      user=1
+      ;;
+    --system)
+      system=1
+      ;;
     --auto | --local)
       if [[ -z ${auto} || ${auto} == ${option} ]]; then
         auto=${option}
@@ -208,5 +183,12 @@ for option in ${@}; do
   esac
 done
 
-# execute main program
-Main
+# begin backup process
+if [[ ${user} -eq 1 ]]; then
+  backupFile 'user'
+elif [[ ${system} -eq 1 ]]; then
+  backupFile 'system'
+else
+  backupFile 'user'
+  backupFile 'system'
+fi
