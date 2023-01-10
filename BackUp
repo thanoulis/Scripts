@@ -15,8 +15,10 @@ readBackupList() {
   fi
   # read backup list from backup file
   while read -r line; do
+    # remove comments
     [[ ${line} =~ ^[[:space:]]*# ]] && continue
-    backup_list+="${line} "
+    # remove invalid entries (not file or directory)
+    [[ -f ${line} || -d ${line} ]] && backup_list+="${line} "
   done < ${backup_rc}
   echo "${backup_list}"
 }
@@ -36,7 +38,7 @@ sendToCloud() {
     rclone copy --progress ${1} GoogleDrive:"LinuxBackup"
     (( ${?} )) || printf "done.\n\n"
   else
-    echo "not available."
+    echo "not available." 1>&2
     return 1
   fi
 }
@@ -48,7 +50,7 @@ removeBackup() {
 }
 
 errorMsg() {
-  echo "${0##*/}: cannot use option '${1}' together with '${2}'"
+  echo "${0##*/}: cannot use option '${1}' together with '${2}'" 1>&2
   exit 1
 }
 
@@ -88,23 +90,19 @@ doDefault() {
 
 backupFile() {
   case ${1} in
-    'user')
-      local backup_name=$(date +%Y-%m-%d_${USER}.tar.${extension:-gz})
-      ;;
-    'system')
-      local backup_name=$(date +%Y-%m-%d_${HOSTNAME}.tar.${extension:-gz})
-      ;;
-    *)
-      return 1
-      ;;
+    user)   local backup_name=$(date +%Y-%m-%d_${USER}.tar.${extension:-gz});;
+    system) local backup_name=$(date +%Y-%m-%d_${HOSTNAME}.tar.${extension:-gz});;
+    *)      return 1;;
   esac
   local backup_list=$(readBackupList "${1}.backup")
   if [[ -z ${backup_list} ]]; then
-    echo "${0##*/}: cannot find ${1}.backup in:"
-    echo "  ${XDG_CONFIG_HOME}/backup/${1}.backup"
-    echo "  ${HOME}/.backup/${1}.backup"
-    echo "  $(pwd)/${1}.backup"
-    exit 1
+    {
+      echo "${0##*/}: cannot find ${1}.backup in:"
+      echo "  ${XDG_CONFIG_HOME}/backup/${1}.backup"
+      echo "  ${HOME}/.backup/${1}.backup"
+      echo "  $(pwd)/${1}.backup"
+      exit 1
+    } 1>&2
   fi
   if [[ ${dry} -eq 1 ]]; then
     printf "\nDry run for ${backup_name}:\n"
@@ -129,17 +127,34 @@ backupFile() {
   esac
 }
 
+# check for external programs
+error=0
+program_list='date tar gzip ping rclone'
+for program in ${program_list}; do
+  if [[ -z $(command -v ${program}) ]]; then
+    echo "${0##*/}: cannot find ${program}" 1>&2
+    error=1
+  fi
+  [[ ${error} -eq 1 ]] && exit 1
+done
+
 # initialize variables
+user=0
+system=0
 dry=0
 vcs='--exclude-vcs'
 tar_type=''
-user=0
-system=0
 auto=''
 
 # check options
 for option in ${@}; do
   case ${option} in
+    --user)
+      user=1
+      ;;
+    --system)
+      system=1
+      ;;
     --dry)
       dry=1
       ;;
@@ -147,6 +162,10 @@ for option in ${@}; do
       vcs=''
       ;;
     --bzip2 | --gzip | --zstd)
+      if [[ -z $(command -v ${option:2}) ]]; then
+        echo "${0##*/}: cannot find ${option:2}" 1>&2
+        exit 1
+      fi
       if [[ -z ${tar_type} || ${tar_type} == ${option} ]]; then
         case ${option} in
           --bzip2) extension="bz2";;
@@ -157,12 +176,6 @@ for option in ${@}; do
       else
         errorMsg ${tar_type} ${option}
       fi
-      ;;
-    --user)
-      user=1
-      ;;
-    --system)
-      system=1
       ;;
     --auto | --local)
       if [[ -z ${auto} || ${auto} == ${option} ]]; then
@@ -176,7 +189,7 @@ for option in ${@}; do
       exit 0
       ;;
     *)
-      echo "${0##*/}: unrecognized option '${option}'"
+      echo "${0##*/}: unrecognized option '${option}'" 1>&2
       helpMsg
       exit 1
       ;;
