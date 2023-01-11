@@ -5,6 +5,7 @@
 * [gzip](https://www.gzip.org) compression (default)
 * [bzip2](http://www.bzip.org) compression
 * [zstd](https://www.zstd.net) compression
+* separate user and system backup archives
 * send backups to Google Drive (needs [rclone](https://rclone.org))
 
 For more information: `Backup --help`
