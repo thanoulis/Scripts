@@ -17,10 +17,7 @@
 #
 
 output() {
-# check if a notification daemon is running
-  if [[ $(gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
-    DISPLAY=:0 notify-send --app-name='CMusNotification' --urgency=low "C* Music Player ${_status}:" "$*"
-  fi
+  NotifySend "C* Music Player is ${_status}:" "$*"
 }
 
 # check if cmus is running
