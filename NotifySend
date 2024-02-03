@@ -2,24 +2,25 @@
 
 (( $# )) || { echo "usage: ${0##*/} <title> <details>"; exit 1; }
 
-gdbus=$(command -v gdbus)
+dunstify=$(command -v dunstify)
 notify=$(command -v notify-send)
 tpmg=$(command -v tpmg)
-zenity=$(command -v zenity)
 rofi=$(command -v rofi)
+zenity=$(command -v zenity)
 nagbar=$(command -v i3-nagbar)
 xmessage=$(command -v xmessage)
 logger=$(command -v logger)
 
-# check if a notification daemon is running
-if [[ -e ${gdbus} && -e ${notify} && $(${gdbus} call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/Dbus --method org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
+if [[ -e ${dunstify} && $(dbus-send --session --dest=org.freedesktop.Notifications --print-reply /org/freedesktop/Notifications org.freedesktop.Notifications.GetServerInformation) =~ 'dunst' ]]; then
+  ${dunstify} --urgency=normal "${1}" "${2}"
+elif [[ -e ${notify} && $(dbus-send --session --dest=org.freedesktop.DBus --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames) =~ 'org.freedesktop.Notifications' ]]; then
   ${notify} --urgency=normal "${1}" "${2}"
 elif [[ -e ${tpmg} ]]; then
   ${tpmg} --notification "${1}" "${2}"
-elif [[ -e ${zenity} ]]; then
-  ${zenity} --info --text "${1}:\n${2}"
 elif [[ -e ${rofi} ]]; then
   ${rofi} -markup -e "<b>${1}</b>: ${2}"
+elif [[ -e ${zenity} ]]; then
+  ${zenity} --info --text "${1}:\n${2}"
 elif [[ -e ${nagbar} ]]; then
   ${nagbar} -t warning -m "${1}: ${2}"
 elif [[ -e ${xmessage} ]]; then
