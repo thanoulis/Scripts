@@ -37,13 +37,15 @@ For more information: `perldoc morse`
 
 # NotifySend
 
-**NotifySend** is a small bash script to use with [notify-send](https://developer.gnome.org/notification-spec).
+**NotifySend** is a small bash script to use with [notify-send](https://developer.gnome.org/notification-spec) or [dunstify](https://dunst-project.org).
 
 If it doesn't find a notification system, falls back to:
+1. [tpmg](https://github.com/thanoulis/tpmg)
 1. [rofi](https://github.com/davatorium/rofi)
+1. [zenity](https://github.com/GNOME/zenity)
 1. [i3-nagbar](https://i3wm.org)
 1. [xmessage](https://xorg.freedesktop.org)
-1. [logger](https://github.com/karelzak/util-linux)
+1. [logger](https://github.com/util-linux/util-linux)
 1. `echo` builtin command.
 
 Usage: `NotifySend <title> <details>`
